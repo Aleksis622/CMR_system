@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->string('document_id')->unique(); // e.g. doc-0001
+            $table->string('document_id')->unique(); 
             $table->string('case_id')->nullable();
             $table->string('type')->nullable();
             $table->string('title')->nullable();

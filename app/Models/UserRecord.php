@@ -14,5 +14,11 @@ class UserRecord extends Model
         'name',
         'email',
         'role',
+        'password'
     ];
+
+    public static function passwordExists($password)
+    {
+        return self::where('password', $password)->exists();
+    }
 }

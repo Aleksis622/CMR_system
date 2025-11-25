@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\LoginController;
+
 
 use App\Models\Vehicle;
 use App\Models\Party;
@@ -9,6 +11,11 @@ use App\Models\CaseRecord;
 use App\Models\Inspection;
 use App\Models\UserRecord;
 use App\Models\Document;
+
+
+
+Route::get('/login', [LoginController::class, 'show'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
 
 Route::get('/fetch-all', function () {
     $url = 'https://deskplan.lv/muita/app.json';

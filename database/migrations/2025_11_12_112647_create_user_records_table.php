@@ -10,8 +10,9 @@ return new class extends Migration
     {
         Schema::create('user_records', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id')->unique(); // e.g. user203
+            $table->string('user_id')->unique();
             $table->string('name')->nullable();
+            $table->string('password');
             $table->string('email')->nullable();
             $table->string('role')->nullable();
             $table->timestamps();
