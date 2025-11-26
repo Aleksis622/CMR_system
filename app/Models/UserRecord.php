@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,13 +11,17 @@ class UserRecord extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'full_name',
         'email',
         'role',
-        'password'
+        'password',
     ];
 
-    public static function passwordExists($password)
+    // Ensure passwords are hashed
+    public function setPasswordAttribute($value)
     {
-        return self::where('password', $password)->exists();
+        if ($value) {
+            $this->attributes['password'] = bcrypt($value);
+        }
     }
 }

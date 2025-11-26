@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class CaseRecord extends Model
 {
     protected $table = 'cases';
+    
 
     protected $fillable = [
         'case_id',

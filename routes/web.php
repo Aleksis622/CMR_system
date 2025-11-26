@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\LoginController;
-
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 use App\Models\Vehicle;
 use App\Models\Party;
@@ -12,7 +13,28 @@ use App\Models\Inspection;
 use App\Models\UserRecord;
 use App\Models\Document;
 
+Route::get('/generate-users-data', function () {
+    $defaultPassword = 'Login123'; 
+    $users = UserRecord::all();
 
+    foreach ($users as $user) {
+
+        if (!$user->email) {
+            $firstName = 'user';
+            if (!empty($user->full_name)) {
+                $firstName = explode(' ', $user->full_name)[0];
+            }
+            $emailBase = Str::slug($firstName);
+            $user->email = strtolower($emailBase) . $user->id . '@example.com';
+        }
+
+        $user->password = $defaultPassword;
+
+        $user->save();
+    }
+
+    return 'Emails and default passwords generated for all users.';
+});
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -107,9 +129,10 @@ Route::get('/fetch-all', function () {
             UserRecord::updateOrCreate(
                 ['user_id' => $u['id']],
                 [
-                    'name' => $u['name'] ?? null,
-                    'email' => $u['email'] ?? null,
+                     'name' => $u['name'] ?? null,
+                    'full_name' => $u['full_name'] ?? null,
                     'role' => $u['role'] ?? null,
+                    'password' => 'Login123',        
                 ]
             );
         }

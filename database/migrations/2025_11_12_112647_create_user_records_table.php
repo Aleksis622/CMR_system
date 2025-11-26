@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('user_id')->unique();
             $table->string('name')->nullable();
-            $table->string('password');
+            $table->string('full_name')->nullable()->after('name');
+            $table->string('password')->nullable();
             $table->string('email')->nullable();
             $table->string('role')->nullable();
             $table->timestamps();
@@ -22,5 +23,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('user_records');
+         $table->dropColumn('full_name');
     }
 };
