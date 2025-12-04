@@ -10,12 +10,15 @@ return new class extends Migration
     {
         Schema::create('user_records', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id')->unique();
-            $table->string('name')->nullable();
-            $table->string('full_name')->nullable()->after('name');
-            $table->string('password')->nullable();
+
+            $table->string('user_id')->unique();  
+            $table->string('name')->nullable();  
+            $table->string('full_name')->nullable();
             $table->string('email')->nullable();
+            $table->string('password')->nullable();
             $table->string('role')->nullable();
+            $table->boolean('active')->default(true);
+
             $table->timestamps();
         });
     }
@@ -23,6 +26,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('user_records');
-         $table->dropColumn('full_name');
     }
 };

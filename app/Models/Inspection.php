@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Traits\Auditable;
 class Inspection extends Model
 {
     use HasFactory;
-
+    use Auditable;
     protected $fillable = [
         'inspection_id',
         'case_id',

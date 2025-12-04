@@ -2,11 +2,11 @@
 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Traits\Auditable;
 class CaseRecord extends Model
 {
     protected $table = 'cases';
-    
+   use Auditable;
 
     protected $fillable = [
         'case_id',
@@ -21,6 +21,11 @@ class CaseRecord extends Model
         'declarant_id',
         'consignee_id',
         'vehicle_id',
+       ' hs_code', 
+        'country', 
+        'currency', 
+        'amount', 
+        'date'
     ];
 
     protected $casts = [

@@ -4,34 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\UserRecord;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
-
-    public function show()
+     public function show()
     {
-        return view('login');
+        return view('login'); 
+    }
+public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    $user = UserRecord::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return back()->with('error', 'Invalid email or password.');
     }
 
-    // Handle login
-    public function login(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'password' => 'required', bcrypt($request->password),
-        ]);
+    // store session
+    session([
+        'user_name' => $user->name,
+        'user_email' => $user->email,
+    ]);
 
-        if (UserRecord::where('password', $request->password)->exists()) {
-            return back()->with('error', 'This password is already used by another user.');
-        }
-
-       // simple session checks 
-        session([
-            'user_name' => $request->name,
-            'user_email' => $request->email,
-        ]);
-
-        return redirect('/dashboard'); 
-    }
+    return redirect()->route('dashboard');
+}
 }
