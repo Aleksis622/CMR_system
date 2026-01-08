@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\Auditable;
+
 class Inspection extends Model
 {
     use HasFactory;
-    use Auditable;
+
     protected $fillable = [
         'inspection_id',
         'case_id',
@@ -20,8 +21,17 @@ class Inspection extends Model
         'assigned_to',
     ];
 
+
+
     protected $casts = [
         'checks' => 'array',
         'start_ts' => 'datetime',
+        'completed_at' => 'datetime',
     ];
+
+
+    public function inspector()
+    {
+        return $this->belongsTo(User::class, 'assigned_to', 'external_id');
+    }
 }

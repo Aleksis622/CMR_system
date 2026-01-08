@@ -2,53 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+
 use App\Models\Vehicle;
 use App\Models\Party;
-use App\Models\CaseRecord;
+use App\Models\CaseModel;
 use App\Models\Inspection;
-use App\Models\UserRecord;
+use App\Models\User;
 use App\Models\Document;
 
 class ImportController extends Controller
 {
-    private $url = 'https://deskplan.lv/muita/app.json';
-    private $defaultPassword = 'Login123';
+    private string $url = 'https://deskplan.lv/muita/app.json';
+    private string $defaultPassword = 'Login_user@123';
 
     public function fetchAndGenerateUsers()
     {
         $response = Http::timeout(60)->get($this->url);
+
+        if (!$response->successful()) {
+            return ' Failed to fetch JSON';
+        }
+
         $data = $response->json();
 
-        if (!isset($data['users']) || !is_array($data['users'])) {
-            return "❌ No users found in JSON.";
+        if (empty($data['users']) || !is_array($data['users'])) {
+            return ' No users found in JSON';
         }
 
         foreach ($data['users'] as $u) {
-            $user = UserRecord::updateOrCreate(
-                ['user_id' => $u['id']],
+
+            $email = $u['email']
+                ?? Str::slug(explode(' ', $u['full_name'] ?? 'user')[0])
+                . $u['id'] . '@gmail.com';
+
+            User::updateOrCreate(
+                ['external_id' => $u['id']],
                 [
-                    'name'      => $u['username'] ?? null,
+                    'email'     => $email,
                     'full_name' => $u['full_name'] ?? null,
-                    'role'      => $u['role'] ?? null,
+                    'role'      => $u['role'] ?? 'broker',
                     'active'    => $u['active'] ?? true,
-                    'password'  => $this->defaultPassword,
+                    'password'  => Hash::make($this->defaultPassword),
                 ]
             );
-
-            if (empty($user->email)) {
-                $firstName = !empty($user->full_name)
-                    ? explode(' ', $user->full_name)[0]
-                    : 'user';
-
-                $user->email = Str::slug($firstName) . $user->id . '@example.com';
-                $user->save();
-            }
         }
 
-        return "✔ Users imported successfully.";
+        return ' Users imported successfully';
     }
 
     public function fetchAll()
@@ -56,13 +58,12 @@ class ImportController extends Controller
         $response = Http::timeout(60)->get($this->url);
 
         if (!$response->successful()) {
-            return "Failed to fetch JSON: " . $response->status();
+            return ' Failed to fetch JSON';
         }
 
         $data = $response->json();
 
-        // Vehicles
-        if (isset($data['vehicles'])) {
+        if (!empty($data['vehicles'])) {
             foreach ($data['vehicles'] as $v) {
                 Vehicle::updateOrCreate(
                     ['vehicle_id' => $v['id']],
@@ -77,91 +78,86 @@ class ImportController extends Controller
             }
         }
 
-        // Parties
-        if (isset($data['parties'])) {
+        if (!empty($data['parties'])) {
             foreach ($data['parties'] as $p) {
                 Party::updateOrCreate(
                     ['party_id' => $p['id']],
                     [
-                        'type'    => $p['type'] ?? null,
-                        'name'    => $p['name'] ?? null,
-                        'reg_code'=> $p['reg_code'] ?? null,
-                        'vat'     => $p['vat'] ?? null,
-                        'country' => $p['country'] ?? null,
-                        'email'   => $p['email'] ?? null,
-                        'phone'   => $p['phone'] ?? null,
+                        'type'     => $p['type'] ?? null,
+                        'name'     => $p['name'] ?? null,
+                        'reg_code' => $p['reg_code'] ?? null,
+                        'vat'      => $p['vat'] ?? null,
+                        'country'  => $p['country'] ?? null,
+                        'email'    => $p['email'] ?? null,
+                        'phone'    => $p['phone'] ?? null,
                     ]
                 );
             }
         }
 
-        // Cases
-        if (isset($data['cases'])) {
-            foreach ($data['cases'] as $c) {
-                CaseRecord::updateOrCreate(
-                    ['case_id' => $c['id']],
-                    [
-                        'external_ref'      => $c['external_ref'] ?? null,
-                        'status'            => $c['status'] ?? null,
-                        'priority'          => $c['priority'] ?? null,
-                        'arrival_ts'        => $c['arrival_ts'] ?? null,
-                        'checkpoint_id'     => $c['checkpoint_id'] ?? null,
-                        'origin_country'    => $c['origin_country'] ?? null,
-                        'destination_country'=> $c['destination_country'] ?? null,
-                        'risk_flags'        => $c['risk_flags'] ?? [],
-                        'declarant_id'      => $c['declarant_id'] ?? null,
-                        'consignee_id'      => $c['consignee_id'] ?? null,
-                        'vehicle_id'        => $c['vehicle_id'] ?? null,
-                    ]
-                );
-            }
-        }
 
-        // Inspections
-        if (isset($data['inspections'])) {
-            foreach ($data['inspections'] as $i) {
-                Inspection::updateOrCreate(
-                    ['inspection_id' => $i['id']],
-                    [
-                        'case_id'     => $i['case_id'] ?? null,
-                        'type'        => $i['type'] ?? null,
-                        'requested_by'=> $i['requested_by'] ?? null,
-                        'start_ts'    => $i['start_ts'] ?? null,
-                        'location'    => $i['location'] ?? null,
-                        'checks'      => $i['checks'] ?? [],
-                        'assigned_to' => $i['assigned_to'] ?? null,
-                    ]
-                );
-            }
+       if (!empty($data['cases'])) {
+    CaseModel::withoutEvents(function () use ($data) {
+        foreach ($data['cases'] as $c) {
+            CaseModel::updateOrCreate(
+                ['case_id' => $c['id']],
+                [
+                    'external_ref' => $c['external_ref'] ?? null,
+                    'status' => $c['status'] ?? null,
+                    'priority' => $c['priority'] ?? null,
+                    'arrival_ts' => $c['arrival_ts'] ?? null,
+                    'checkpoint_id' => $c['checkpoint_id'] ?? null,
+                    'origin_country' => $c['origin_country'] ?? null,
+                    'destination_country'=> $c['destination_country'] ?? null,
+                    'risk_flags' => $c['risk_flags'] ?? [],
+                    'declarant_id' => $c['declarant_id'] ?? null,
+                    'consignee_id' => $c['consignee_id'] ?? null,
+                    'vehicle_id' => $c['vehicle_id'] ?? null,
+                ]
+            );
         }
+    });
+}
 
-        // Users
-        if (isset($data['users'])) {
+          if (!empty($data['inspections'])) {
+          foreach ($data['inspections'] as $i) {
+          Inspection::updateOrCreate(
+            ['inspection_id' => $i['id']],
+            [
+                'case_id'      => $i['case_id'] ?? null,
+                'type'         => $i['type'] ?? null,
+                'requested_by' => $i['requested_by'] ?? null,
+                'start_ts'     => $i['start_ts'] ?? null,
+                'location'     => $i['location'] ?? null,
+                'checks'       => $i['checks'] ?? [],
+                'assigned_to' => $i['assigned_to'],
+            ]
+        );
+    }
+}
+
+        if (!empty($data['users'])) {
             foreach ($data['users'] as $u) {
-                $user = UserRecord::updateOrCreate(
-                    ['user_id' => $u['id']],
-                    [
-                        'name'      => $u['username'] ?? null,
-                        'full_name' => $u['full_name'] ?? null,
-                        'role'      => $u['role'] ?? null,
-                        'active'    => $u['active'] ?? true,
-                        'password'  => $this->defaultPassword,
-                    ]
-                );
 
-                if (empty($user->email)) {
-                    $firstName = !empty($user->full_name)
-                        ? explode(' ', $user->full_name)[0]
-                        : 'user';
+                $email = $u['email']
+                    ?? Str::slug(explode(' ', $u['full_name'] ?? 'user')[0])
+                    . $u['id'] . '@gmail.com';
 
-                    $user->email = Str::slug($firstName) . $user->id . '@example.com';
-                    $user->save();
-                }
+                User::updateOrCreate(
+                ['external_id' => $u['id']],
+     [
+                 'full_name' => $u['full_name'],
+                 'email'     => $email,
+                 'role'      => $u['role'],
+                 'active'    => $u['active'],
+                'password'  => Hash::make('Login_user@123'),
+    ]
+);
+
             }
         }
 
-        // Documents
-        if (isset($data['documents'])) {
+        if (!empty($data['documents'])) {
             foreach ($data['documents'] as $d) {
                 Document::updateOrCreate(
                     ['document_id' => $d['id']],
@@ -175,6 +171,6 @@ class ImportController extends Controller
             }
         }
 
-        return "✔ All data imported successfully.";
+        return ' All data imported successfully!!';
     }
 }

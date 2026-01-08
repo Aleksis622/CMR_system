@@ -11,15 +11,11 @@ use Illuminate\Support\Facades\Auth;
 class WebhookController extends Controller
 {
     protected $secret;
-
     public function __construct()
     {
-        $this->secret = config('services.webhook.secret'); // Add this to config/services.php
+        $this->secret = config('services.webhook.secret'); 
     }
 
-    /**
-     * Send a HMAC-signed webhook to an external URL
-     */
     public function send(array $data, string $url)
     {
         $payload = json_encode($data);
@@ -37,9 +33,6 @@ class WebhookController extends Controller
         return $response;
     }
 
-    /**
-     * Receive and verify incoming webhook
-     */
     public function receive(Request $request)
     {
         $signature = $request->header('signature');
@@ -59,7 +52,7 @@ class WebhookController extends Controller
 
         Log::info("Webhook received:", $payload);
 
-        // Optional: save to audit log
+
         AuditLog::create([
             'user_id'       => Auth::id() ?? null,
             'auditable_type'=> 'Webhook',
@@ -71,7 +64,6 @@ class WebhookController extends Controller
             'user_agent'    => $request->userAgent(),
         ]);
 
-        // Process payload further if needed (e.g., update cases, users, etc.)
 
         return response()->json(['status' => 'ok']);
     }

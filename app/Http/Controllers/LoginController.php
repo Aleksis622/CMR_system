@@ -3,34 +3,38 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\UserRecord;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-     public function show()
+    public function show()
     {
-        return view('login'); 
-    }
-public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    $user = UserRecord::where('email', $request->email)->first();
-
-    if (!$user || !Hash::check($request->password, $user->password)) {
-        return back()->with('error', 'Invalid email or password.');
+        return view('login');
     }
 
-    // store session
-    session([
-        'user_name' => $user->name,
-        'user_email' => $user->email,
-    ]);
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
 
-    return redirect()->route('dashboard');
+        if (!Auth::attempt($credentials)) {
+            return back()->with('error', 'Invalid email or password');
+        }
+
+        if (!Auth::user()->active) {
+            Auth::logout();
+            return back()->with('error', 'User is inactive');
+        }
+
+        return redirect()->route('dashboard');
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('login');
+    }
 }
-}
+

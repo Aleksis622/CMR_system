@@ -1,39 +1,34 @@
+@extends('layouts.app')
+@stack('styles')
+@section('content')
+<link rel="stylesheet" href="{{ asset('css/login.css') }}">
+<div class="login-wrapper">
+    <div class="login-card">
+        <h1 class="logo" style="color: #6c63ff; margin-bottom: 10px;">CRM</h1>
+        <h2>Welcome Back</h2>
+        <p>Please enter your details to Log in.</p>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
+        @if(session('error'))
+            <div class="error-msg">
+                {{ session('error') }}
+            </div>
+        @endif
 
-    <h2>Login</h2>
+        <form method="POST" action="/login">
+            @csrf
 
-    @if(session('error'))
-        <p>{{ session('error') }}</p>
-    @endif
+            <div class="form-group">
+                <label>Email </label>
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
 
-    <form action="/login" method="POST">
-        @csrf
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
 
-        <div>
-            <label>Name</label>
-            <input type="text" name="name" placeholder = "Name" required>
-        </div>
-
-        <div>
-            <label>E-mail</label>
-            <input type="email" name="email" placeholder = "E-mail" required>
-        </div>
-
-        <div>
-            <label>Password</label>
-            <input type="password" name="password" placeholder = "Password" required>
-        </div>
-
-        <button type="submit">Login</button>
-    </form>
-
-</body>
-</html>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+    </div>
+</div>
+@endsection

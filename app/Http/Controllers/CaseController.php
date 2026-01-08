@@ -4,34 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\CaseRecord;
+use App\Models\CaseModel;
 use Carbon\Carbon;
 
 class CaseController extends Controller
 {
-
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'hs_code'  => ['required', 'regex:/^[0-9]{10}$/'],
-            'country'  => [
-                'required',
-                'alpha',
-                'size:2',
-                Rule::in(['LV', 'LT', 'EE', 'PL', 'DE', 'US']) // ISO country codes
-            ],
-            'currency' => ['required', 'alpha', 'size:3'],
-            'amount'   => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'date'     => ['required', 'date_format:Y-m-d\TH:i:s\Z'],
+            'case_id' => 'required|string|unique:cases,case_id',
+            'status'  => 'required|string',
+            'priority'=> 'nullable|string',
+            'arrival_ts' => 'required|date_format:Y-m-d\TH:i:s\Z',
+            'origin_country' => ['required','alpha','size:2'],
+            'destination_country' => ['required','alpha','size:2'],
         ]);
 
-        // Convert date to UTC
-        $validated['date'] = Carbon::parse($validated['date'])->setTimezone('UTC');
+        $validated['arrival_ts'] = Carbon::parse($validated['arrival_ts'])->utc();
 
-        $case = CaseRecord::create($validated);
+        $case = CaseModel::create($validated);
 
         return response()->json([
-            'message' => 'Case record created successfully.',
+            'message' => 'Case izveidots',
             'case' => $case
         ]);
     }

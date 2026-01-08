@@ -2,38 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\CaseModel;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Models\CaseRecord;
-use App\Models\UserRecord;
 
 class DashboardController extends Controller
 {
-    /**
-     * Only authenticated users can access dashboard
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
-     * Show dashboard after login
-     */
     public function index()
     {
-        $user = Auth::user();
+        $roles = ['admin', 'inspector', 'analyst', 'broker'];
 
-        // Example data to display on dashboard
-        $totalCases = CaseRecord::count();
-        $activeUsers = UserRecord::where('active', true)->count();
+        $chartData = User::where('active', true)
+            ->selectRaw('role, COUNT(*) as total')
+            ->groupBy('role')
+            ->pluck('total', 'role')
+            ->toArray();
 
         return view('dashboard', [
-            'user' => $user,
-            'totalCases' => $totalCases,
-            'activeUsers' => $activeUsers
+            'user'             => Auth::user(),
+            'totalCases'       => CaseModel::count(),
+            'totalUsersCount'  => User::count(),
+            'roles'            => $roles,
+            'chartData'        => array_map(fn($r) => $chartData[$r] ?? 0, $roles),
         ]);
     }
 }
-
-
